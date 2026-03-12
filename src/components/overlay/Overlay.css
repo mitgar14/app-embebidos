@@ -1,0 +1,89 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+}
+
+.overlay-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.ble-status {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ble-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.ble-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.composition-info {
+  text-align: right;
+}
+
+.composition-title {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+}
+
+.composition-detail {
+  display: block;
+  font-family: var(--font-display);
+  font-weight: 300;
+  font-size: 0.7rem;
+  color: var(--color-text-secondary);
+}
+
+.overlay-footer {
+  text-align: center;
+}
+
+.active-section {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.3rem;
+  transition: color 0.3s;
+}
+
+.gesture-display {
+  display: flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.gesture-label {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+}
+
+.gesture-value {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  color: var(--color-accent);
+}
