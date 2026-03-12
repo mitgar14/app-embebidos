@@ -1,0 +1,23 @@
+:root {
+  /* Synesthesia palette */
+  --color-bg: #0A0906;
+  --color-text-primary: #EDE8D0;
+  --color-text-secondary: #8A7E6B;
+  --color-accent: #C9972A;
+
+  /* Section colors */
+  --color-violines: #D4A017;
+  --color-cuerdas: #8B2E2E;
+  --color-madera: #4A7C6F;
+  --color-metal: #CD7F32;
+  --color-tutti: #EDE8D0;
+
+  /* Status */
+  --color-ble-connected: #4A7C6F;
+  --color-ble-disconnected: #8B2E2E;
+
+  /* Typography */
+  --font-display: 'Cormorant Garamond', serif;
+  --font-mono: 'DM Mono', monospace;
+  --font-sans: 'DM Sans', sans-serif;
+}
