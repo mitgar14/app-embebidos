@@ -1,6 +1,5 @@
 import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
-import * as THREE from 'three'
 import Totem from './Totem'
 
 export default function TuttiTotem({ active, ...props }) {

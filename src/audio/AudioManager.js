@@ -1,4 +1,4 @@
-import { SECTIONS, SECTION_KEYS } from '../config/sections'
+import { SECTION_KEYS } from '../config/sections'
 
 export class AudioManager {
   constructor() {
@@ -7,6 +7,7 @@ export class AudioManager {
     this.analysers = {}
     this.elements = {}
     this.stems = []
+    this.freqDataBuffers = {}
   }
 
   async init(stemPaths) {
@@ -32,6 +33,7 @@ export class AudioManager {
       this.gains[key] = gain
       this.analysers[key] = analyser
       this.elements[key] = audio
+      this.freqDataBuffers[key] = new Uint8Array(analyser.frequencyBinCount)
       this.stems.push(key)
     }
   }
@@ -80,10 +82,22 @@ export class AudioManager {
     }
   }
 
+  dispose() {
+    for (const key of SECTION_KEYS) {
+      const el = this.elements[key]
+      if (el) {
+        el.pause()
+        el.src = ''
+      }
+    }
+    this.ctx?.close()
+  }
+
   getFrequencyData(sectionKey) {
     const analyser = this.analysers[sectionKey]
     if (!analyser) return null
-    const data = new Uint8Array(analyser.frequencyBinCount)
+    const data = this.freqDataBuffers[sectionKey]
+    if (!data) return null
     analyser.getByteFrequencyData(data)
     return data
   }

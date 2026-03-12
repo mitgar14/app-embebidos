@@ -2,6 +2,8 @@ import { EffectComposer, Bloom, Vignette, Noise, ChromaticAberration } from '@re
 import { BlendFunction } from 'postprocessing'
 import { Vector2 } from 'three'
 
+const CA_OFFSET = new Vector2(0.001, 0.001)
+
 export default function Effects() {
   return (
     <EffectComposer>
@@ -15,7 +17,7 @@ export default function Effects() {
       />
       <Vignette offset={0.9} darkness={1.2} />
       <Noise opacity={0.06} blendFunction={BlendFunction.OVERLAY} />
-      <ChromaticAberration offset={new Vector2(0.001, 0.001)} />
+      <ChromaticAberration offset={CA_OFFSET} />
     </EffectComposer>
   )
 }

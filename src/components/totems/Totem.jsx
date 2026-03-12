@@ -1,4 +1,4 @@
-import { useRef } from 'react'
+import { useRef, useMemo } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
@@ -6,7 +6,8 @@ export default function Totem({ children, position, color, rotationSpeed = 0.3, 
   const groupRef = useRef()
   const materialRef = useRef()
 
-  const colorObj = new THREE.Color(color)
+  const colorObj = useMemo(() => new THREE.Color(color), [color])
+  const tempVec = useMemo(() => new THREE.Vector3(), [])
 
   useFrame((state) => {
     const t = state.clock.elapsedTime
@@ -20,7 +21,8 @@ export default function Totem({ children, position, color, rotationSpeed = 0.3, 
 
     // Scale transition (simple lerp for now)
     const targetScale = active ? 1.0 : 0.7
-    group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.05)
+    tempVec.set(targetScale, targetScale, targetScale)
+    group.scale.lerp(tempVec, 0.05)
 
     // Emissive intensity transition with audio-reactive micro-pulses
     if (materialRef.current) {

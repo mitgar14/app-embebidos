@@ -22,12 +22,15 @@ export function useAudio() {
     const manager = new AudioManager()
     managerRef.current = manager
 
-    manager.init(STEM_PATHS).then(() => {
-      manager.resume()
+    manager.init(STEM_PATHS).then(async () => {
+      await manager.resume()
       manager.playAll()
     })
 
-    return () => { managerRef.current = null }
+    return () => {
+      managerRef.current?.dispose()
+      managerRef.current = null
+    }
   }, [started])
 
   useEffect(() => {
