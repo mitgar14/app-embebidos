@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Preload } from '@react-three/drei'
 import ConcertHall from './ConcertHall'
+import Effects from './Effects'
 
 export default function Scene() {
   return (
@@ -15,6 +16,7 @@ export default function Scene() {
       style={{ position: 'fixed', top: 0, left: 0 }}
     >
       <ConcertHall />
+      <Effects />
       <Preload all />
     </Canvas>
   )
