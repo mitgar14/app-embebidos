@@ -1,0 +1,59 @@
+.touch-controls {
+  position: fixed;
+  bottom: 2.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 0.6rem;
+  z-index: 20;
+  pointer-events: auto;
+}
+
+.touch-btn {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 2px solid var(--section-color, var(--color-text-secondary));
+  background: transparent;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s, transform 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.touch-btn-label {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--section-color, var(--color-text-secondary));
+  line-height: 1;
+}
+
+.touch-btn--active {
+  background: var(--section-color);
+  transform: scale(1.15);
+}
+
+.touch-btn--active .touch-btn-label {
+  color: var(--color-bg);
+}
+
+.touch-btn--silence {
+  border-color: var(--color-text-secondary);
+}
+
+.touch-btn--silence .touch-btn-label {
+  color: var(--color-text-secondary);
+  font-size: 1.2rem;
+  font-family: var(--font-sans);
+}
+
+.touch-btn:active {
+  transform: scale(0.92);
+}
+
+.touch-btn--active:active {
+  transform: scale(1.05);
+}
