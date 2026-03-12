@@ -6,11 +6,11 @@ import { useAudio } from './hooks/useAudio'
 
 export default function App() {
   useKeyboardGestures()
-  useAudio()
+  const audioRef = useAudio()
 
   return (
     <>
-      <Scene />
+      <Scene audioRef={audioRef} />
       <Overlay />
       <StartScreen />
     </>

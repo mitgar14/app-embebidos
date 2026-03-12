@@ -3,7 +3,7 @@ import { Preload } from '@react-three/drei'
 import ConcertHall from './ConcertHall'
 import Effects from './Effects'
 
-export default function Scene() {
+export default function Scene({ audioRef }) {
   return (
     <Canvas
       camera={{ position: [0, 2, 6], fov: 55, near: 0.1, far: 50 }}
@@ -15,7 +15,7 @@ export default function Scene() {
       }}
       style={{ position: 'fixed', top: 0, left: 0 }}
     >
-      <ConcertHall />
+      <ConcertHall audioRef={audioRef} />
       <Effects />
       <Preload all />
     </Canvas>

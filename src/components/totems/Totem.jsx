@@ -2,7 +2,7 @@ import { useRef } from 'react'
 import { useFrame } from '@react-three/fiber'
 import * as THREE from 'three'
 
-export default function Totem({ children, position, color, rotationSpeed = 0.3, active = false }) {
+export default function Totem({ children, position, color, rotationSpeed = 0.3, active = false, amplitudes, sectionKey }) {
   const groupRef = useRef()
   const materialRef = useRef()
 
@@ -22,10 +22,12 @@ export default function Totem({ children, position, color, rotationSpeed = 0.3, 
     const targetScale = active ? 1.0 : 0.7
     group.scale.lerp(new THREE.Vector3(targetScale, targetScale, targetScale), 0.05)
 
-    // Emissive intensity transition
+    // Emissive intensity transition with audio-reactive micro-pulses
     if (materialRef.current) {
       const targetIntensity = active ? 1.0 : 0.12
-      materialRef.current.emissiveIntensity += (targetIntensity - materialRef.current.emissiveIntensity) * 0.05
+      const amp = (amplitudes?.current && sectionKey) ? (amplitudes.current[sectionKey] || 0) : 0
+      const pulsedIntensity = targetIntensity * (1 + amp * 0.3)
+      materialRef.current.emissiveIntensity += (pulsedIntensity - materialRef.current.emissiveIntensity) * 0.05
     }
   })
 

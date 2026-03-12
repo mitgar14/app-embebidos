@@ -1,3 +1,4 @@
+import { useFrame } from '@react-three/fiber'
 import { SECTIONS } from '../config/sections'
 import {
   ViolinesTotem,
@@ -8,6 +9,7 @@ import {
 } from './totems'
 import SectionSpotlight from './SectionSpotlight'
 import { useGestureStore } from '../store/useGestureStore'
+import { useAudioReactive } from '../hooks/useAudioReactive'
 
 const TOTEM_COMPONENTS = {
   violines: ViolinesTotem,
@@ -17,8 +19,13 @@ const TOTEM_COMPONENTS = {
   tutti: TuttiTotem,
 }
 
-export default function ConcertHall() {
+export default function ConcertHall({ audioRef }) {
   const activeSection = useGestureStore((s) => s.activeSection)
+  const { amplitudes, update } = useAudioReactive(audioRef)
+
+  useFrame(() => {
+    update()
+  })
 
   return (
     <>
@@ -40,6 +47,8 @@ export default function ConcertHall() {
               color={section.color}
               rotationSpeed={section.rotationSpeed}
               active={key === activeSection}
+              amplitudes={amplitudes}
+              sectionKey={key}
             />
             <SectionSpotlight
               position={section.position}
