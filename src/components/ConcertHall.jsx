@@ -8,6 +8,7 @@ import {
   TuttiTotem,
 } from './totems'
 import SectionSpotlight from './SectionSpotlight'
+import DustParticles from './DustParticles'
 import { useGestureStore } from '../store/useGestureStore'
 import { useAudioReactive } from '../hooks/useAudioReactive'
 
@@ -58,6 +59,8 @@ export default function ConcertHall({ audioRef }) {
           </group>
         )
       })}
+
+      <DustParticles />
     </>
   )
 }
