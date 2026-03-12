@@ -7,6 +7,7 @@ import {
   TuttiTotem,
 } from './totems'
 import SectionSpotlight from './SectionSpotlight'
+import { useGestureStore } from '../store/useGestureStore'
 
 const TOTEM_COMPONENTS = {
   violines: ViolinesTotem,
@@ -17,6 +18,8 @@ const TOTEM_COMPONENTS = {
 }
 
 export default function ConcertHall() {
+  const activeSection = useGestureStore((s) => s.activeSection)
+
   return (
     <>
       {/* Concert hall darkness */}
@@ -36,12 +39,12 @@ export default function ConcertHall() {
               position={section.position}
               color={section.color}
               rotationSpeed={section.rotationSpeed}
-              active={false}
+              active={key === activeSection}
             />
             <SectionSpotlight
               position={section.position}
               color={section.color}
-              active={false}
+              active={key === activeSection}
             />
           </group>
         )
