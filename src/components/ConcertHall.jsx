@@ -6,6 +6,7 @@ import {
   VientosMetalTotem,
   TuttiTotem,
 } from './totems'
+import SectionSpotlight from './SectionSpotlight'
 
 const TOTEM_COMPONENTS = {
   violines: ViolinesTotem,
@@ -30,13 +31,19 @@ export default function ConcertHall() {
       {Object.entries(SECTIONS).map(([key, section]) => {
         const Component = TOTEM_COMPONENTS[key]
         return (
-          <Component
-            key={key}
-            position={section.position}
-            color={section.color}
-            rotationSpeed={section.rotationSpeed}
-            active={false}
-          />
+          <group key={key}>
+            <Component
+              position={section.position}
+              color={section.color}
+              rotationSpeed={section.rotationSpeed}
+              active={false}
+            />
+            <SectionSpotlight
+              position={section.position}
+              color={section.color}
+              active={false}
+            />
+          </group>
         )
       })}
     </>
