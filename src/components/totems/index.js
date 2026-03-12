@@ -1,0 +1,5 @@
+export { default as ViolinesTotem } from './ViolinesTotem'
+export { default as CuerdasGravesTotem } from './CuerdasGravesTotem'
+export { default as VientosMaderaTotem } from './VientosMaderaTotem'
+export { default as VientosMetalTotem } from './VientosMetalTotem'
+export { default as TuttiTotem } from './TuttiTotem'

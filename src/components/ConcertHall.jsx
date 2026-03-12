@@ -1,3 +1,20 @@
+import { SECTIONS } from '../config/sections'
+import {
+  ViolinesTotem,
+  CuerdasGravesTotem,
+  VientosMaderaTotem,
+  VientosMetalTotem,
+  TuttiTotem,
+} from './totems'
+
+const TOTEM_COMPONENTS = {
+  violines: ViolinesTotem,
+  cuerdas: CuerdasGravesTotem,
+  madera: VientosMaderaTotem,
+  metal: VientosMetalTotem,
+  tutti: TuttiTotem,
+}
+
 export default function ConcertHall() {
   return (
     <>
@@ -9,6 +26,19 @@ export default function ConcertHall() {
 
       {/* Atmospheric fog */}
       <fogExp2 attach="fog" color="#0A0906" density={0.08} />
+
+      {Object.entries(SECTIONS).map(([key, section]) => {
+        const Component = TOTEM_COMPONENTS[key]
+        return (
+          <Component
+            key={key}
+            position={section.position}
+            color={section.color}
+            rotationSpeed={section.rotationSpeed}
+            active={false}
+          />
+        )
+      })}
     </>
   )
 }
