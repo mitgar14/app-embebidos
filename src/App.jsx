@@ -1,9 +1,5 @@
-function App() {
-  return (
-    <div id="app">
-      <h1>Il Podio</h1>
-    </div>
-  )
-}
+import Scene from './components/Scene'
 
-export default App
+export default function App() {
+  return <Scene />
+}
