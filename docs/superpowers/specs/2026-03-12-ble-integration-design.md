@@ -58,6 +58,8 @@ UUIDs son placeholder. El compañero los reemplaza con los definitivos cuando de
 
 El mapeo `BYTE_TO_GESTURE` debe coincidir con el orden de clases de Edge Impulse.
 
+**Nota sobre "tutti"**: El gesto `tutti` NO es una clase del modelo TinyML (que solo clasifica movimientos físicos). `Tutti` solo es alcanzable mediante los touch controls de la app. El mapeo BLE cubre exclusivamente las clases que el Arduino clasifica.
+
 ### Detección de plataforma
 
 ```javascript
@@ -66,6 +68,26 @@ const isNative = Capacitor.isNativePlatform()
 ```
 
 Si no es nativo (dev en browser), BLE no está disponible → solo touch controls. Esto permite seguir usando `npm run dev` sin que BLE rompa nada.
+
+### Hook: `src/hooks/useBle.js`
+
+Puente entre BleManager y el store de Zustand. Se invoca en `App.jsx`.
+
+```javascript
+export function useBle() {
+  // En mount: BleManager.initialize() si plataforma nativa
+  // Suscribe callbacks de BleManager → setBleStatus, addBleDevice, setGesture
+  // En unmount: BleManager.dispose()
+  // Retorna: { startScan, stopScan, connect, disconnect }
+}
+```
+
+- **`startScan()`**: limpia lista de dispositivos → `clearBleDevices()`, llama `BleManager.startScan()` con callback que ejecuta `addBleDevice()`
+- **`stopScan()`**: delega a `BleManager.stopScan()`
+- **`connect(deviceId)`**: llama `BleManager.connect()`, registra callback de notificación que parsea byte → `setGesture()`
+- **`disconnect()`**: llama `BleManager.disconnect()`, resetea `bleStatus` a `'idle'`
+
+El hook no retorna estado; los componentes leen directamente del store.
 
 ---
 
@@ -96,6 +118,12 @@ setShowBlePanel: (show) => ...,
 
 - `bleConnected` se elimina, reemplazado por `bleStatus === 'connected'` (derivado)
 - `setBleConnected` se elimina, reemplazado por `setBleStatus`
+
+### Migración en consumidores
+
+**`Overlay.jsx`** (línea 7): cambiar `useGestureStore((s) => s.bleConnected)` por `useGestureStore((s) => s.bleStatus)`. Actualizar la lógica de renderizado del dot y label para manejar los 5 estados (`idle`, `scanning`, `connecting`, `connected`, `disconnected`) en lugar del booleano actual.
+
+No hay otros consumidores de `bleConnected` en el codebase actual.
 
 ### Lógica de visibilidad de touch controls
 
@@ -129,6 +157,22 @@ Se ocultan automáticamente al conectar BLE, reaparecen al desconectar, y el usu
 - Si conecta y luego toca "Comenzar": entra con BLE activo
 - Si toca "Comenzar" sin conectar: entra con touch controls
 
+### Punto de montaje de BlePanel
+
+`<BlePanel />` se monta en `App.jsx`, no dentro de `Overlay.jsx`. Razón: Overlay retorna `null` cuando `started === false`, pero BlePanel debe funcionar tanto antes de empezar (desde StartScreen) como después (desde el HUD). Montarlo en App garantiza disponibilidad en ambos escenarios.
+
+```jsx
+// App.jsx (estructura resultante)
+<>
+  <Scene audioRef={audioRef} />
+  <Overlay />
+  <TouchControls />
+  <BlePanel />        {/* ← siempre montado, visibilidad controlada por showBlePanel */}
+  <TouchToggle />     {/* ← visible solo cuando bleStatus === 'connected' */}
+  <StartScreen />
+</>
+```
+
 ### 3b. BlePanel — Lista de dispositivos
 
 Panel modal centrado con la estética de Il Podio:
@@ -154,8 +198,20 @@ Panel modal centrado con la estética de Il Podio:
 - **MAC parcial**: últimos 4 caracteres, `font-mono`, `color: var(--color-text-secondary)`
 - **Timeout**: 15 segundos de scan, luego "No se encontraron dispositivos cercanos" con botón "Reintentar"
 - **Estado "Conectando..."**: reemplaza la lista mientras se conecta al dispositivo seleccionado
-- **z-index**: 50 (sobre overlay pero debajo de StartScreen)
+- **z-index**: 50 (ver pila completa abajo)
 - Se usa tanto desde StartScreen como desde el HUD (mismo componente)
+
+### Pila de z-index
+
+| Capa | z-index | Componente |
+|---|---|---|
+| Escena 3D (Canvas) | 0 (flujo normal) | `Scene` |
+| Overlay HUD | 10 | `.overlay` |
+| Touch controls | 20 | `.touch-controls` |
+| BlePanel | 50 | `.ble-panel` |
+| StartScreen | 100 | `.start-screen` |
+
+BlePanel usa z-index 50 para quedar sobre el HUD y los touch controls, pero debajo de StartScreen. Cuando se abre desde StartScreen, StartScreen sigue visible detrás gracias a la transparencia del panel.
 
 ### 3c. Overlay HUD — Icono BLE interactivo
 
@@ -276,7 +332,7 @@ Se genera `docs/BLE-CONTRATO.md` con la especificación que el compañero debe r
 - `src/components/overlay/Overlay.css` — animación de dot parpadeante, pointer-events
 - `src/components/overlay/TouchControls.jsx` — lógica de visibilidad condicional
 - `src/components/overlay/TouchControls.css` — transiciones de mostrar/ocultar
-- `src/App.jsx` — agregar hook useBle
+- `src/App.jsx` — agregar hook `useBle` + montar `<BlePanel />`
 - `package.json` — nuevas dependencias (Capacitor, plugin BLE)
 - `android/app/src/main/AndroidManifest.xml` — permisos BLE
 
