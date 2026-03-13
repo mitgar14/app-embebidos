@@ -7,6 +7,8 @@
   gap: 0.6rem;
   z-index: 20;
   pointer-events: auto;
+  opacity: 1;
+  transition: opacity 0.3s, transform 0.3s;
 }
 
 .touch-btn {
@@ -56,4 +58,11 @@
 
 .touch-btn--active:active {
   transform: scale(1.05);
+}
+
+.touch-controls--hidden {
+  opacity: 0;
+  transform: translateX(-50%) translateY(1rem);
+  pointer-events: none;
+  transition: opacity 0.3s, transform 0.3s;
 }

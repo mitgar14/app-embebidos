@@ -14,11 +14,15 @@ export default function TouchControls() {
   const started = useGestureStore((s) => s.started)
   const activeSection = useGestureStore((s) => s.activeSection)
   const setGesture = useGestureStore((s) => s.setGesture)
+  const bleStatus = useGestureStore((s) => s.bleStatus)
+  const showTouchControls = useGestureStore((s) => s.showTouchControls)
 
   if (!started) return null
 
+  const visible = bleStatus !== 'connected' || showTouchControls
+
   return (
-    <div className="touch-controls">
+    <div className={`touch-controls${visible ? '' : ' touch-controls--hidden'}`}>
       {Object.entries(SECTIONS).map(([key, section]) => (
         <button
           key={key}
