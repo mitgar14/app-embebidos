@@ -33,9 +33,9 @@ BleManager
 ### Flujo de datos
 
 ```
-Arduino BLE notify (1 byte: índice 0-4)
+Arduino BLE notify (1 byte: índice 0-5)
   → BleManager.startNotifications() callback
-  → parsear byte → nombre de gesto (0→"infinito", 1→"m", 2→"maracas", 3→"u", 4→"silencio")
+  → parsear byte → nombre de gesto (0→"infinito", 1→"m", 2→"maracas", 3→"u", 4→"silencio", 5→pendiente)
   → useGestureStore.setGesture(gesture)
   → totems + audio reaccionan (ya implementado)
 ```
@@ -51,14 +51,15 @@ export const BLE_CONFIG = {
   RECONNECT_MAX_ATTEMPTS: 5,
 }
 
-export const BYTE_TO_GESTURE = ['infinito', 'm', 'maracas', 'u', 'silencio']
+export const BYTE_TO_GESTURE = ['infinito', 'm', 'maracas', 'u', 'silencio', null]
+// índice 5: gesto pendiente de definir → mapeará a la sección "tutti"
 ```
 
 UUIDs son placeholder. El compañero los reemplaza con los definitivos cuando defina su servicio GATT.
 
 El mapeo `BYTE_TO_GESTURE` debe coincidir con el orden de clases de Edge Impulse.
 
-**Nota sobre "tutti"**: El gesto `tutti` NO es una clase del modelo TinyML (que solo clasifica movimientos físicos). `Tutti` solo es alcanzable mediante los touch controls de la app. El mapeo BLE cubre exclusivamente las clases que el Arduino clasifica.
+**Nota sobre el gesto de "tutti"**: Habrá un sexto gesto físico (índice 5) que activará la sección `tutti`. Su nombre está pendiente de definir por el equipo; una vez acordado, se reemplaza el `null` en posición 5 del array y se agrega la entrada correspondiente en `GESTURE_TO_SECTION` del store. Los touch controls también permiten activar `tutti` manualmente.
 
 ### Detección de plataforma
 
@@ -301,8 +302,8 @@ npx cap sync
 Se genera `docs/BLE-CONTRATO.md` con la especificación que el compañero debe respetar:
 
 - **UUIDs**: placeholder (los define el compañero y los pone en `src/config/ble.js`)
-- **Formato**: 1 byte por notificación, valor = índice de la clase (0-4)
-- **Mapeo**: 0=infinito, 1=m, 2=maracas, 3=u, 4=silencio (debe coincidir con orden de Edge Impulse)
+- **Formato**: 1 byte por notificación, valor = índice de la clase (0-5)
+- **Mapeo**: 0=infinito, 1=m, 2=maracas, 3=u, 4=silencio, 5=pendiente (debe coincidir con orden de Edge Impulse)
 - **Propiedades**: `BLERead | BLENotify`
 - **Debounce**: solo enviar cuando el gesto cambia respecto al anterior
 - **Desconexión**: re-advertise automático para permitir reconexión
