@@ -41,3 +41,22 @@
 .start-button:hover {
   opacity: 0.85;
 }
+
+.start-ble-link {
+  margin-top: 1.2rem;
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-color: rgba(138, 126, 107, 0.4);
+  transition: color 0.2s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.start-ble-link:active {
+  color: var(--color-text-primary);
+}
