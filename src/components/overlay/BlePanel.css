@@ -1,0 +1,128 @@
+/* src/components/overlay/BlePanel.css */
+.ble-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(10, 9, 6, 0.85);
+  backdrop-filter: blur(8px);
+  pointer-events: auto;
+}
+
+.ble-panel-content {
+  width: 90%;
+  max-width: 340px;
+  padding: 1.5rem;
+}
+
+.ble-panel-title {
+  font-family: var(--font-display);
+  font-weight: 600;
+  font-size: 1.1rem;
+  color: var(--color-text-primary);
+  margin-bottom: 1.2rem;
+}
+
+.ble-panel-status {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: 1rem 0;
+}
+
+.ble-device-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.ble-device-item {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  width: 100%;
+  padding: 0.7rem 0.8rem;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ble-device-item:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.ble-device-name {
+  font-family: var(--font-display);
+  font-size: 0.85rem;
+  color: var(--color-text-primary);
+  flex: 1;
+  text-align: left;
+}
+
+.ble-device-signal {
+  display: flex;
+  align-items: baseline;
+  gap: 0.3rem;
+}
+
+.ble-device-bars {
+  font-size: 0.7rem;
+  color: var(--color-accent);
+  letter-spacing: 1px;
+}
+
+.ble-device-rssi {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-text-secondary);
+}
+
+.ble-device-mac {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-text-secondary);
+  min-width: 2.5rem;
+  text-align: right;
+}
+
+.ble-panel-empty {
+  text-align: center;
+  padding: 1.5rem 0;
+}
+
+.ble-panel-empty p {
+  font-family: var(--font-display);
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  margin-bottom: 0.8rem;
+}
+
+.ble-panel-btn {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: var(--color-text-secondary);
+  background: none;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.5rem 1.2rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: color 0.15s, border-color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ble-panel-btn:active {
+  color: var(--color-text-primary);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.ble-panel-btn--cancel {
+  display: block;
+  margin: 1.2rem auto 0;
+}
