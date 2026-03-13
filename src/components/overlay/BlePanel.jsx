@@ -23,7 +23,9 @@ export default function BlePanel({ onStartScan, onStopScan, onConnect }) {
 
   useEffect(() => {
     if (showBlePanel && bleStatus !== 'connecting') {
-      onStartScan()
+      onStartScan().catch((err) => {
+        console.warn('BLE scan failed:', err)
+      })
     }
     return () => {
       if (showBlePanel) {

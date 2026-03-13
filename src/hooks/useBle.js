@@ -92,9 +92,14 @@ export function useBle() {
     clearBleDevices()
     setBleStatus('scanning')
 
-    await BleManager.startScan((device) => {
-      addBleDevice(device)
-    })
+    try {
+      await BleManager.startScan((device) => {
+        addBleDevice(device)
+      })
+    } catch (err) {
+      setBleStatus('idle')
+      throw err
+    }
 
     // Timeout de escaneo — guardar ref para cleanup
     clearTimeout(scanTimer.current)
