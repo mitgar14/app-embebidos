@@ -10,7 +10,7 @@ Especificación que el Arduino Nano 33 BLE debe cumplir para comunicarse con la 
 |---|---|
 | Service UUID | **Por definir** (actualizar en `src/config/ble.js` → `BLE_CONFIG.SERVICE_UUID`) |
 | Characteristic UUID | **Por definir** (actualizar en `src/config/ble.js` → `BLE_CONFIG.CHARACTERISTIC_UUID`) |
-| Propiedades | `BLERead | BLENotify` |
+| Propiedades | `BLERead / BLENotify` |
 
 ---
 

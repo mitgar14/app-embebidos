@@ -16,4 +16,10 @@ html, body, #root {
   -webkit-font-smoothing: antialiased;
   touch-action: none;
   user-select: none;
+  /* Safe area for notch/nav bar */
+  padding:
+    env(safe-area-inset-top, 0)
+    env(safe-area-inset-right, 0)
+    env(safe-area-inset-bottom, 0)
+    env(safe-area-inset-left, 0);
 }

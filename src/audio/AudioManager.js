@@ -1,5 +1,7 @@
 import { SECTION_KEYS } from '../config/sections'
 
+const SOLO_KEYS = SECTION_KEYS.filter((k) => k !== 'tutti')
+
 export class AudioManager {
   constructor() {
     this.ctx = null
@@ -23,7 +25,8 @@ export class AudioManager {
       const gain = this.ctx.createGain()
       const analyser = this.ctx.createAnalyser()
 
-      gain.gain.value = 0.3 // Start attenuated
+      // Start with only tutti at low volume; individual stems silent
+      gain.gain.value = key === 'tutti' ? 0.15 : 0.0
       analyser.fftSize = 512
 
       source.connect(gain)
@@ -57,17 +60,22 @@ export class AudioManager {
 
   highlightSection(sectionKey) {
     const now = this.ctx?.currentTime ?? 0
-    for (const key of SECTION_KEYS) {
-      const gain = this.gains[key]
-      if (!gain) continue
+    const tuttiGain = this.gains.tutti
 
-      if (sectionKey === 'tutti') {
-        // Tutti: all at full volume
-        gain.gain.setTargetAtTime(1.0, now, 0.15)
-      } else if (key === sectionKey) {
-        gain.gain.setTargetAtTime(1.0, now, 0.15)
-      } else {
-        gain.gain.setTargetAtTime(0.15, now, 0.15)
+    if (sectionKey === 'tutti') {
+      // Tutti: only the pre-mixed track plays; mute individual stems
+      if (tuttiGain) tuttiGain.gain.setTargetAtTime(1.0, now, 0.15)
+      for (const key of SOLO_KEYS) {
+        const gain = this.gains[key]
+        if (gain) gain.gain.setTargetAtTime(0.0, now, 0.15)
+      }
+    } else {
+      // Individual section: mute the tutti track, mix individual stems
+      if (tuttiGain) tuttiGain.gain.setTargetAtTime(0.0, now, 0.15)
+      for (const key of SOLO_KEYS) {
+        const gain = this.gains[key]
+        if (!gain) continue
+        gain.gain.setTargetAtTime(key === sectionKey ? 1.0 : 0.15, now, 0.15)
       }
     }
   }

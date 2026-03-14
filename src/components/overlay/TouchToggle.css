@@ -1,8 +1,8 @@
 /* src/components/overlay/TouchToggle.css */
 .touch-toggle {
   position: fixed;
-  bottom: 1rem;
-  right: 1rem;
+  bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
+  right: calc(1rem + env(safe-area-inset-right, 0px));
   z-index: 25;
   width: 36px;
   height: 36px;

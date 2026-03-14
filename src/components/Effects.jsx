@@ -15,7 +15,7 @@ export default function Effects() {
         resolutionX={256}
         resolutionY={256}
       />
-      <Vignette offset={0.9} darkness={1.2} />
+      <Vignette offset={0.6} darkness={0.5} />
       <Noise opacity={0.06} blendFunction={BlendFunction.OVERLAY} />
       <ChromaticAberration offset={CA_OFFSET} />
     </EffectComposer>

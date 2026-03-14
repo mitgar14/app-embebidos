@@ -31,13 +31,13 @@ export default function ConcertHall({ audioRef }) {
   return (
     <>
       {/* Concert hall darkness */}
-      <ambientLight color="#0A0906" intensity={0.08} />
+      <ambientLight color="#1A1810" intensity={0.15} />
 
       {/* Footlights from below */}
-      <pointLight color="#C9972A" intensity={0.3} position={[0, -1, 3]} />
+      <pointLight color="#C9972A" intensity={0.4} position={[0, -1, 3]} />
 
       {/* Atmospheric fog */}
-      <fogExp2 attach="fog" color="#0A0906" density={0.08} />
+      <fogExp2 attach="fog" color="#0A0906" density={0.05} />
 
       {Object.entries(SECTIONS).map(([key, section]) => {
         const Component = TOTEM_COMPONENTS[key]

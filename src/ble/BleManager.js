@@ -16,7 +16,7 @@ class BleManagerClass {
   }
 
   async startScan(onResult) {
-    if (this.scanning) return
+    if (!this.initialized || this.scanning) return
     this.scanning = true
 
     try {
@@ -37,7 +37,7 @@ class BleManagerClass {
   }
 
   async stopScan() {
-    if (!this.scanning) return
+    if (!this.initialized || !this.scanning) return
     await BleClient.stopLEScan()
     this.scanning = false
   }

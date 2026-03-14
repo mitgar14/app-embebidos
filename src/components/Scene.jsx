@@ -1,6 +1,7 @@
 import { Canvas } from '@react-three/fiber'
 import { Preload } from '@react-three/drei'
 import ConcertHall from './ConcertHall'
+import CameraRig from './CameraRig'
 import Effects from './Effects'
 
 export default function Scene({ audioRef }) {
@@ -13,8 +14,9 @@ export default function Scene({ audioRef }) {
         toneMapping: 3, // ACESFilmicToneMapping
         toneMappingExposure: 1.0,
       }}
-      style={{ position: 'fixed', top: 0, left: 0 }}
+      style={{ position: 'fixed', top: 0, left: 0, zIndex: 0 }}
     >
+      <CameraRig />
       <ConcertHall audioRef={audioRef} />
       <Effects />
       <Preload all />
