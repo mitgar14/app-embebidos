@@ -27,3 +27,6 @@ android/
 # Capacitor Android build artifacts
 android/app/build/
 android/.gradle/
+
+# Superpowers brainstorm artifacts
+.superpowers/
