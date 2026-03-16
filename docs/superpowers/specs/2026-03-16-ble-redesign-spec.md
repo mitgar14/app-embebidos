@@ -17,7 +17,7 @@
 ### 1.2 Problemas de protocolo
 
 - `BYTE_TO_GESTURE` asume 6 clases; el modelo Edge Impulse tiene **5**: `[Infinito, M, Maracas, Silencio, U]`.
-- Los índices de `u` (3) y `silencio` (4) están **invertidos** respecto al modelo.
+- Los índices de `u` y `silencio` están **invertidos** respecto al modelo: el código actual tiene `u` en índice 3 y `silencio` en índice 4, pero el modelo Edge Impulse tiene `Silencio` en índice 3 y `U` en índice 4. El nuevo protocolo de 5 bytes elimina este problema al parsear por posición fija.
 - Se transmite 1 byte (argmax) descartando las probabilidades del softmax.
 - Los UUIDs de servicio y característica son **placeholders**.
 
@@ -219,7 +219,8 @@ Estado inicial: ningún instrumento activo, silencio total
 - **Transición a tutti**: cuando `activeSections.size === 4` (las 4 secciones instrumentales), se hace crossfade a `stem_tutti` y se silencian los stems individuales.
 - **Keep-alive (Infinito)**: mientras el modelo detecte Infinito con confianza >= umbral, el idle timer se resetea. Cualquier otro gesto reconocido también resetea el timer (y además suma su instrumento si no estaba ya activo).
 - **Idle timeout**: si pasan `IDLE_TIMEOUT` ms sin ningún gesto reconocido (ninguna clase >= umbral), fade out total y reset de `activeSections`.
-- **Confianza**: solo se acepta un gesto si `max(probs) >= CONFIDENCE_THRESHOLD` (0.60, coincide con el threshold del modelo EI).
+- **Confianza**: solo se acepta un gesto si `max(probs) >= CONFIDENCE_THRESHOLD` (0.60, umbral post-dequantización, coincide con el threshold del modelo EI).
+- **Desempate**: si dos clases tienen probabilidad idéntica tras cuantización (posible dado que 8 bits = 256 niveles), gana el índice menor (first-index-wins). Esto es aceptable dado nuestro set de gestos — los empates exactos son raros y transitorios.
 
 ### 5.4 Determinación del gesto activo
 
@@ -240,6 +241,26 @@ function resolveGesture(probs) {
 
 ---
 
+## 5bis. Comportamiento ante desconexión BLE mid-session
+
+Cuando el Arduino se desconecta durante una sesión activa (con instrumentos acumulados):
+
+1. **El idle timer arranca inmediatamente**: al dejar de recibir notificaciones, el timer de inactividad expira tras `IDLE_TIMEOUT` ms y ejecuta fade out + reset de `activeSections`.
+2. **Se inicia reconexión automática** (lógica existente con backoff exponencial, hasta 5 intentos).
+3. **El estado acumulado NO se preserva**: si la reconexión tiene éxito, el usuario arranca de cero. Razón: preservar un estado que ya se desvaneció (fade out) generaría una experiencia inconsistente.
+4. **Indicador visual**: el overlay muestra "Reconectando..." durante los intentos. Si falla definitivamente, vuelve a "Sin conexión".
+5. **Re-suscripción automática**: `BleManager.connect()` ya re-suscribe a notificaciones como parte del flujo de conexión, por lo que no se requiere lógica adicional.
+
+### Validación del payload BLE
+
+Cada notificación debe validarse antes de procesarse:
+
+```javascript
+if (value.byteLength !== 5) return  // payload corrupto o incompatible, ignorar
+```
+
+---
+
 ## 6. Cambios en el store (Zustand)
 
 ### 6.1 Estado reemplazado
@@ -252,7 +273,7 @@ activeSection: null,
 // DESPUÉS
 currentGesture: null,           // gesto detectado actualmente (o null)
 gestureConfidence: 0,           // confianza del gesto actual
-activeSections: new Set(),      // secciones acumuladas
+activeSections: [],             // secciones acumuladas (Array con dedup, no Set — compatible con serialización JSON y devtools de Zustand)
 isTutti: false,                 // true cuando las 4 secciones están activas
 ```
 
@@ -269,31 +290,31 @@ const GESTURE_TO_SECTION = {
   silencio: null,
 }
 
-// DESPUÉS
+// DESPUÉS — NOTA: esto NO es un bugfix, es un cambio semántico completo.
+// Las asociaciones gesto→sección se redefinen desde cero.
 const GESTURE_TO_SECTION = {
-  u: 'violines',
-  m: 'cuerdas',
-  maracas: 'madera',
-  silencio: 'metal',
-  infinito: null,  // keep-alive, no suma sección
+  u: 'violines',         // antes: u → metal
+  m: 'cuerdas',          // se mantiene
+  maracas: 'madera',     // se mantiene
+  silencio: 'metal',     // antes: silencio → null (silenciaba todo)
+  infinito: null,        // antes: infinito → violines. Ahora es keep-alive.
 }
 
-const ALL_INSTRUMENT_SECTIONS = new Set(['violines', 'cuerdas', 'madera', 'metal'])
+const ALL_INSTRUMENT_SECTIONS = ['violines', 'cuerdas', 'madera', 'metal']
 ```
 
 ### 6.3 Acciones nuevas
 
 ```javascript
 addSection: (section) => set((state) => {
-  if (!section || state.activeSections.has(section)) return state
-  const next = new Set(state.activeSections)
-  next.add(section)
-  const isTutti = next.size === ALL_INSTRUMENT_SECTIONS.size
+  if (!section || state.activeSections.includes(section)) return state
+  const next = [...state.activeSections, section]
+  const isTutti = next.length === ALL_INSTRUMENT_SECTIONS.length
   return { activeSections: next, isTutti }
 }),
 
 resetSections: () => set({
-  activeSections: new Set(),
+  activeSections: [],
   isTutti: false,
   currentGesture: null,
   gestureConfidence: 0,
@@ -341,27 +362,27 @@ Los touch controls manuales deben reflejar la lógica acumulativa:
 
 | Archivo | Cambios |
 |---------|---------|
-| `src/config/ble.js` | UUIDs reales, MAC conocida, nuevo mapeo de clases, idle timeout, threshold |
-| `src/ble/BleManager.js` | Filtro por UUID en scan, parsing de 5 bytes, validación post-conexión |
-| `src/hooks/useBle.js` | Lógica de gesto con probabilidades, idle timer, acumulación |
-| `src/store/useGestureStore.js` | `activeSections` (Set), `isTutti`, `gestureConfidence`, acciones nuevas |
-| `src/components/overlay/BlePanel.jsx` | Rediseño modal compacto (Opción C), botón X, compatibilidad, señal legible |
+| `src/config/ble.js` | UUIDs reales, MAC conocida, nuevo mapeo de clases (5 elementos), idle timeout, confidence threshold, labels del modelo |
+| `src/ble/BleManager.js` | Filtro por UUID en `requestLEScan`, parsing de 5 bytes (no 1), validación de `byteLength === 5` |
+| `src/hooks/useBle.js` | `resolveGesture()` con probabilidades, idle timer, lógica de acumulación via `addSection`, reset por timeout |
+| `src/store/useGestureStore.js` | Reemplazar `activeSection` (string) por `activeSections` (Array con dedup), agregar `isTutti`, `gestureConfidence`, `addSection()`, `resetSections()`. Estado inicial de `currentGesture` pasa de `'silencio'` a `null` |
+| `src/components/overlay/BlePanel.jsx` | Rediseño modal compacto (Opción C): botón X, max-height, tarjetas de dispositivo con compatibilidad, señal legible, MAC conocida destacada |
 | `src/components/overlay/BlePanel.css` | Estilos del modal rediseñado |
-| `src/components/overlay/Overlay.jsx` | Indicador de sección activa plural (no singular) |
-| `src/components/overlay/TouchControls.jsx` | Comportamiento acumulativo (toggle on, no exclusivo) |
-| `src/config/sections.js` | Eliminar `tutti` como sección con posición (es estado, no sección) |
-| `src/App.jsx` | Handler del botón atrás de Android (Capacitor App plugin) |
-| Motor de audio (componente por identificar) | Stems simultáneos, crossfade a tutti, fade idle |
-| `sketch_mar16a.ino` → sketch BLE | Agregar BLE con característica de 5 bytes |
+| `src/components/overlay/Overlay.jsx` | Cambiar footer de sección singular a plural (lista de secciones activas). **Fix null safety**: `currentGesture` ahora puede ser `null`, la línea `currentGesture.toUpperCase()` crasheará — usar optional chaining o fallback |
+| `src/components/overlay/TouchControls.jsx` | Invertir `GESTURE_MAP` al nuevo mapeo (`violines: 'u'`, `cuerdas: 'm'`, `madera: 'maracas'`, `metal: 'silencio'`). Eliminar botón de silencio (`touch-btn--silence`). Eliminar entrada `tutti` del mapa. Cambiar `activeSection` singular por `activeSections.includes(key)`. Comportamiento: toggle on acumulativo, no exclusivo |
+| `src/hooks/useKeyboardGestures.js` | Actualizar `KEY_MAP` al nuevo mapeo: `1→'u'` (violines), `2→'m'` (cuerdas), `3→'maracas'` (madera), `4→'silencio'` (metal), `5→'infinito'` (keep-alive). Eliminar `tutti` y `Escape→silencio`. Adaptar a lógica acumulativa (`addSection` en vez de `setGesture` exclusivo) |
+| `src/config/sections.js` | `tutti` permanece como clave de stem en `SECTIONS` (el audio manager lo necesita para iterar stems e inicializar `stem_tutti`), pero se elimina de `SECTION_KEYS` u otros iteradores usados por la UI/3D para posiciones. Alternativa: separar `INSTRUMENT_SECTIONS` (sin tutti) de `ALL_SECTIONS` (con tutti) |
+| `src/App.jsx` | Handler del botón atrás de Android via `@capacitor/app`. Registrar en `useEffect`, limpiar con `listener.remove()` en cleanup |
+| Motor de audio (componente por identificar) | Soporte para múltiples stems simultáneos, crossfade equal-power a `stem_tutti` (~500ms), fade out por idle (~800ms). `tutti` sigue existiendo como stem, solo cambia cuándo y cómo se activa |
+| `sketch_mar16a.ino` → sketch BLE | Agregar BLE: `BLEService`, `BLECharacteristic(5 bytes)`, `BLE.setAdvertisedService()`, loop de inferencia + `writeValue(probs, 5)` |
 
 ---
 
 ## 11. Dependencias y prerrequisitos
 
 - **Del compañero:** UUIDs reales del Service y Characteristic del Arduino.
-- **Del compañero:** Sketch BLE funcional que envíe los 5 bytes de probabilidades.
-- **Existente:** `@capacitor/app` necesario para el handler del botón atrás. Verificar si ya está instalado.
-- **Sin nuevas dependencias npm** requeridas para la app.
+- **Del compañero:** Sketch BLE funcional que envíe los 5 bytes de probabilidades. El sketch debe incluir `BLE.setAdvertisedService(gestureService)` para que el UUID aparezca en el advertising packet (no solo en la tabla GATT).
+- **Nueva dependencia:** `@capacitor/app` — necesario para el handler del botón atrás de Android. No está instalado actualmente. Instalar con `npm install @capacitor/app`.
 
 ---
 
