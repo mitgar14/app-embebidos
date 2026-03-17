@@ -1,4 +1,6 @@
 /* src/components/overlay/BlePanel.css */
+
+/* Backdrop */
 .ble-panel {
   position: fixed;
   inset: 0;
@@ -9,120 +11,244 @@
   background: rgba(10, 9, 6, 0.85);
   backdrop-filter: blur(8px);
   pointer-events: auto;
+  animation: ble-fade-in 0.2s ease;
 }
 
-.ble-panel-content {
+@keyframes ble-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal */
+.ble-modal {
   width: 90%;
   max-width: 340px;
-  padding: 1.5rem;
+  max-height: 50vh;
+  background: #131210;
+  border: 1px solid rgba(237, 232, 208, 0.06);
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 }
 
-.ble-panel-title {
+/* Header */
+.ble-modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1rem 0.75rem;
+  border-bottom: 1px solid rgba(237, 232, 208, 0.06);
+  flex-shrink: 0;
+}
+
+.ble-modal-title {
   font-family: var(--font-display);
   font-weight: 600;
-  font-size: 1.1rem;
+  font-size: 1rem;
   color: var(--color-text-primary);
-  margin-bottom: 1.2rem;
 }
 
-.ble-panel-status {
+.ble-modal-close {
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(237, 232, 208, 0.08);
+  border-radius: 50%;
+  background: none;
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.ble-modal-close:active {
+  border-color: rgba(237, 232, 208, 0.2);
+  color: var(--color-text-primary);
+}
+
+/* Body */
+.ble-modal-body {
+  padding: 0.75rem;
+  overflow-y: auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.ble-modal-status {
   font-family: var(--font-mono);
   font-size: 0.75rem;
   color: var(--color-text-secondary);
   text-align: center;
-  padding: 1rem 0;
+  padding: 1.5rem 0;
 }
 
-.ble-device-list {
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
-}
-
-.ble-device-item {
+/* Device card */
+.ble-device-card {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
+  gap: 0.65rem;
   width: 100%;
-  padding: 0.7rem 0.8rem;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 6px;
+  padding: 0.7rem 0.75rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(237, 232, 208, 0.06);
+  border-radius: 8px;
   cursor: pointer;
-  transition: background 0.15s;
+  transition: border-color 0.15s, background 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.ble-device-item:active {
-  background: rgba(255, 255, 255, 0.08);
+.ble-device-card:active {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.ble-device-card--known {
+  border-color: rgba(74, 124, 111, 0.25);
+}
+
+.ble-device-icon {
+  width: 30px;
+  height: 30px;
+  border-radius: 6px;
+  background: rgba(74, 124, 111, 0.1);
+  color: var(--color-ble-connected);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.ble-device-info {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .ble-device-name {
   font-family: var(--font-display);
   font-size: 0.85rem;
+  font-weight: 500;
   color: var(--color-text-primary);
-  flex: 1;
   text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.ble-device-signal {
+.ble-device-meta {
   display: flex;
-  align-items: baseline;
-  gap: 0.3rem;
-}
-
-.ble-device-bars {
-  font-size: 0.7rem;
-  color: var(--color-accent);
-  letter-spacing: 1px;
-}
-
-.ble-device-rssi {
+  align-items: center;
+  gap: 0.4rem;
   font-family: var(--font-mono);
-  font-size: 0.6rem;
+  font-size: 0.55rem;
+}
+
+.ble-device-tag {
+  color: var(--color-ble-connected);
+}
+
+.ble-device-tag::after {
+  content: '\00b7';
+  margin-left: 0.4rem;
   color: var(--color-text-secondary);
 }
 
-.ble-device-mac {
-  font-family: var(--font-mono);
-  font-size: 0.6rem;
-  color: var(--color-text-secondary);
-  min-width: 2.5rem;
-  text-align: right;
+.ble-device-compat {
+  color: var(--color-ble-connected);
 }
 
-.ble-panel-empty {
+.ble-device-compat::after {
+  content: '\00b7';
+  margin-left: 0.4rem;
+  color: var(--color-text-secondary);
+}
+
+.ble-device-rssi-label {
+  color: var(--color-text-secondary);
+}
+
+.ble-signal-bars {
+  flex-shrink: 0;
+}
+
+/* Empty state */
+.ble-modal-empty {
   text-align: center;
   padding: 1.5rem 0;
 }
 
-.ble-panel-empty p {
+.ble-modal-empty p {
   font-family: var(--font-display);
   font-size: 0.8rem;
   color: var(--color-text-secondary);
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.4rem;
 }
 
-.ble-panel-btn {
+.ble-modal-hint {
   font-family: var(--font-mono);
-  font-size: 0.75rem;
+  font-size: 0.6rem;
+  color: var(--color-text-secondary);
+  opacity: 0.6;
+  margin-bottom: 1rem;
+}
+
+/* Footer */
+.ble-modal-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.6rem 1rem 0.75rem;
+  border-top: 1px solid rgba(237, 232, 208, 0.06);
+  flex-shrink: 0;
+}
+
+.ble-modal-scanning {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.ble-modal-scanning--idle {
+  opacity: 0.5;
+}
+
+.ble-modal-scanning-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--color-accent);
+  animation: ble-blink 1s infinite;
+}
+
+@keyframes ble-blink {
+  0%, 100% { opacity: 0.2; }
+  50% { opacity: 1; }
+}
+
+/* Buttons */
+.ble-modal-btn {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
   color: var(--color-text-secondary);
   background: none;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.5rem 1.2rem;
+  border: 1px solid rgba(237, 232, 208, 0.1);
+  padding: 0.4rem 1rem;
   border-radius: 4px;
   cursor: pointer;
   transition: color 0.15s, border-color 0.15s;
   -webkit-tap-highlight-color: transparent;
 }
 
-.ble-panel-btn:active {
+.ble-modal-btn:active {
   color: var(--color-text-primary);
-  border-color: rgba(255, 255, 255, 0.2);
-}
-
-.ble-panel-btn--cancel {
-  display: block;
-  margin: 1.2rem auto 0;
+  border-color: rgba(237, 232, 208, 0.2);
 }
