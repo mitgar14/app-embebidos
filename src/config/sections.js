@@ -36,4 +36,8 @@ export const SECTIONS = {
   },
 }
 
+// Todas las claves incluyendo tutti (para AudioManager, iteración de stems)
 export const SECTION_KEYS = Object.keys(SECTIONS)
+
+// Solo las 4 secciones instrumentales individuales (para UI, 3D, lógica acumulativa)
+export const INSTRUMENT_KEYS = SECTION_KEYS.filter((k) => k !== 'tutti')
