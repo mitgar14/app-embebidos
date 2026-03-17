@@ -7,7 +7,7 @@ import './BlePanel.css'
 function rssiToLabel(rssi) {
   if (rssi >= -50) return 'Excelente'
   if (rssi >= -70) return 'Buena'
-  return 'D\u00e9bil'
+  return 'Débil'
 }
 
 function rssiToBars(rssi) {
@@ -132,7 +132,7 @@ export default function BlePanel({ onStartScan, onStopScan, onConnect }) {
                 <div className="ble-modal-empty">
                   <p>No se encontraron Arduinos cercanos</p>
                   <p className="ble-modal-hint">
-                    Verifica que el Arduino est\u00e9 encendido y cerca
+                    Verifica que el Arduino esté encendido y cerca
                   </p>
                   <button className="ble-modal-btn" onClick={handleRetry}>
                     Reintentar
@@ -153,7 +153,7 @@ export default function BlePanel({ onStartScan, onStopScan, onConnect }) {
           )}
           {!isScanning && bleDevices.length > 0 && (
             <span className="ble-modal-scanning ble-modal-scanning--idle">
-              B\u00fasqueda finalizada
+              Búsqueda finalizada
             </span>
           )}
           <button className="ble-modal-btn" onClick={handleClose}>

@@ -1,12 +1,11 @@
 // src/config/ble.js
 
 export const BLE_CONFIG = {
-  // UUIDs — actualizar cuando el compañero los defina
-  SERVICE_UUID: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890',
-  CHARACTERISTIC_UUID: 'a1b2c3d5-e5f6-7890-abcd-ef1234567890',
+  SERVICE_UUID: '19b10000-e8f2-537e-4f6c-d104768a1214',
+  CHARACTERISTIC_UUID: '19b10001-e8f2-537e-4f6c-d104768a1214',
 
   // Identificación del Arduino
-  DEVICE_NAME: 'Arduino_BLE',
+  DEVICE_NAME: 'Arduino',
   KNOWN_MAC: '31:FB:E1:57:CA:41',
 
   // Timing
