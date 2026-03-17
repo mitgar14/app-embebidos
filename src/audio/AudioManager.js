@@ -25,8 +25,7 @@ export class AudioManager {
       const gain = this.ctx.createGain()
       const analyser = this.ctx.createAnalyser()
 
-      // Start with only tutti at low volume; individual stems silent
-      gain.gain.value = key === 'tutti' ? 0.15 : 0.0
+      gain.gain.value = 0.0
       analyser.fftSize = 512
 
       source.connect(gain)
@@ -48,36 +47,41 @@ export class AudioManager {
   }
 
   playAll() {
-    const startOffset = 0
     for (const key of SECTION_KEYS) {
       const el = this.elements[key]
       if (el) {
-        el.currentTime = startOffset
+        el.currentTime = 0
         el.play().catch(() => {})
       }
     }
   }
 
-  highlightSection(sectionKey) {
+  highlightSections(activeSections, isTutti) {
     const now = this.ctx?.currentTime ?? 0
     const tuttiGain = this.gains.tutti
 
-    if (sectionKey === 'tutti') {
-      // Tutti: only the pre-mixed track plays; mute individual stems
-      if (tuttiGain) tuttiGain.gain.setTargetAtTime(1.0, now, 0.15)
+    if (isTutti) {
+      if (tuttiGain) tuttiGain.gain.setTargetAtTime(1.0, now, 0.3)
       for (const key of SOLO_KEYS) {
         const gain = this.gains[key]
-        if (gain) gain.gain.setTargetAtTime(0.0, now, 0.15)
+        if (gain) gain.gain.setTargetAtTime(0.0, now, 0.3)
       }
     } else {
-      // Individual section: mute the tutti track, mix individual stems
       if (tuttiGain) tuttiGain.gain.setTargetAtTime(0.0, now, 0.15)
       for (const key of SOLO_KEYS) {
         const gain = this.gains[key]
         if (!gain) continue
-        gain.gain.setTargetAtTime(key === sectionKey ? 1.0 : 0.15, now, 0.15)
+        const target = activeSections.includes(key) ? 1.0 : 0.0
+        gain.gain.setTargetAtTime(target, now, 0.15)
       }
     }
+  }
+
+  highlightSection(sectionKey) {
+    this.highlightSections(
+      sectionKey === 'tutti' ? SOLO_KEYS : [sectionKey],
+      sectionKey === 'tutti',
+    )
   }
 
   silence() {
@@ -85,7 +89,7 @@ export class AudioManager {
     for (const key of SECTION_KEYS) {
       const gain = this.gains[key]
       if (gain) {
-        gain.gain.setTargetAtTime(0.0, now, 0.3)
+        gain.gain.setTargetAtTime(0.0, now, 0.5)
       }
     }
   }
