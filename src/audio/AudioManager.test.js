@@ -34,7 +34,34 @@ describe('AudioManager', () => {
     expect(manager.stems).toHaveLength(0)
   })
 
-  it('highlights a section by setting gain values', () => {
+  it('highlightSections sets gain for active sections', () => {
+    manager.ctx = mockAudioContext
+    manager.gains = {
+      violines: mockAudioContext.createGain(),
+      cuerdas: mockAudioContext.createGain(),
+      madera: mockAudioContext.createGain(),
+      metal: mockAudioContext.createGain(),
+      tutti: mockAudioContext.createGain(),
+    }
+    manager.highlightSections(['violines', 'cuerdas'], false)
+    expect(manager.gains.violines.gain.setTargetAtTime).toHaveBeenCalled()
+    expect(manager.gains.tutti.gain.setTargetAtTime).toHaveBeenCalled()
+  })
+
+  it('highlightSections with isTutti activates tutti gain', () => {
+    manager.ctx = mockAudioContext
+    manager.gains = {
+      violines: mockAudioContext.createGain(),
+      cuerdas: mockAudioContext.createGain(),
+      madera: mockAudioContext.createGain(),
+      metal: mockAudioContext.createGain(),
+      tutti: mockAudioContext.createGain(),
+    }
+    manager.highlightSections(['violines', 'cuerdas', 'madera', 'metal'], true)
+    expect(manager.gains.tutti.gain.setTargetAtTime).toHaveBeenCalledWith(1.0, 0, 0.3)
+  })
+
+  it('highlightSection delegates to highlightSections', () => {
     manager.ctx = mockAudioContext
     manager.gains = {
       violines: mockAudioContext.createGain(),

@@ -21,7 +21,8 @@ const TOTEM_COMPONENTS = {
 }
 
 export default function ConcertHall({ audioRef }) {
-  const activeSection = useGestureStore((s) => s.activeSection)
+  const activeSections = useGestureStore((s) => s.activeSections)
+  const isTutti = useGestureStore((s) => s.isTutti)
   const { amplitudes, update } = useAudioReactive(audioRef)
 
   useFrame(() => {
@@ -47,14 +48,14 @@ export default function ConcertHall({ audioRef }) {
               position={section.position}
               color={section.color}
               rotationSpeed={section.rotationSpeed}
-              active={key === activeSection}
+              active={key === 'tutti' ? isTutti : activeSections.includes(key)}
               amplitudes={amplitudes}
               sectionKey={key}
             />
             <SectionSpotlight
               position={section.position}
               color={section.color}
-              active={key === activeSection}
+              active={key === 'tutti' ? isTutti : activeSections.includes(key)}
             />
           </group>
         )

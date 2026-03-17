@@ -7,7 +7,7 @@ import { SECTIONS } from '../config/sections'
 const LERP_SPEED = 1.5
 
 export default function CameraRig() {
-  const activeSection = useGestureStore((s) => s.activeSection)
+  const activeSections = useGestureStore((s) => s.activeSections)
   const lookAt = useRef(new Vector3(0, 0.5, 0))
 
   useFrame(({ camera, size }, delta) => {
@@ -25,8 +25,13 @@ export default function CameraRig() {
     let lookY = 0.5
     let lookZ = 0
 
-    if (activeSection && SECTIONS[activeSection]) {
-      const [sx, sy, sz] = SECTIONS[activeSection].position
+    // Bias toward the last activated section
+    const lastSection = activeSections.length > 0
+      ? activeSections[activeSections.length - 1]
+      : null
+
+    if (lastSection && SECTIONS[lastSection]) {
+      const [sx, sy, sz] = SECTIONS[lastSection].position
       biasX = sx * 0.15
       lookX = sx * 0.25
       lookY = sy * 0.4 + 0.3

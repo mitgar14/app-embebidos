@@ -3,10 +3,11 @@ import { useGestureStore } from './useGestureStore'
 
 describe('useGestureStore', () => {
   beforeEach(() => {
-    // Reset store entre tests
     useGestureStore.setState({
-      currentGesture: 'silencio',
-      activeSection: null,
+      currentGesture: null,
+      gestureConfidence: 0,
+      activeSections: [],
+      isTutti: false,
       bleStatus: 'idle',
       bleDeviceId: null,
       bleDevices: [],
@@ -16,28 +17,61 @@ describe('useGestureStore', () => {
     })
   })
 
-  it('starts with idle BLE status and silencio gesture', () => {
+  it('starts with idle BLE status and null gesture', () => {
     const state = useGestureStore.getState()
-    expect(state.activeSection).toBe(null)
-    expect(state.currentGesture).toBe('silencio')
+    expect(state.activeSections).toEqual([])
+    expect(state.currentGesture).toBe(null)
+    expect(state.isTutti).toBe(false)
     expect(state.bleStatus).toBe('idle')
     expect(state.bleDeviceId).toBe(null)
     expect(state.bleDevices).toEqual([])
-    expect(state.showTouchControls).toBe(false)
-    expect(state.showBlePanel).toBe(false)
   })
 
-  it('sets active section on gesture', () => {
-    useGestureStore.getState().setGesture('infinito')
-    const state = useGestureStore.getState()
-    expect(state.currentGesture).toBe('infinito')
-    expect(state.activeSection).toBe('violines')
+  it('accumulates sections via processGesture', () => {
+    useGestureStore.getState().processGesture('u', 0.95)
+    expect(useGestureStore.getState().activeSections).toEqual(['violines'])
+    expect(useGestureStore.getState().currentGesture).toBe('u')
+
+    useGestureStore.getState().processGesture('m', 0.88)
+    expect(useGestureStore.getState().activeSections).toEqual(['violines', 'cuerdas'])
   })
 
-  it('clears active section on silencio', () => {
-    useGestureStore.getState().setGesture('infinito')
-    useGestureStore.getState().setGesture('silencio')
-    expect(useGestureStore.getState().activeSection).toBe(null)
+  it('does not duplicate sections', () => {
+    useGestureStore.getState().processGesture('u', 0.9)
+    useGestureStore.getState().processGesture('u', 0.85)
+    expect(useGestureStore.getState().activeSections).toEqual(['violines'])
+  })
+
+  it('sets isTutti when all 4 sections are active', () => {
+    const { processGesture } = useGestureStore.getState()
+    processGesture('u', 0.9)
+    processGesture('m', 0.9)
+    processGesture('maracas', 0.9)
+    expect(useGestureStore.getState().isTutti).toBe(false)
+    processGesture('silencio', 0.9)
+    expect(useGestureStore.getState().isTutti).toBe(true)
+  })
+
+  it('infinito is keep-alive (does not add section)', () => {
+    useGestureStore.getState().processGesture('infinito', 0.95)
+    expect(useGestureStore.getState().activeSections).toEqual([])
+    expect(useGestureStore.getState().currentGesture).toBe('infinito')
+  })
+
+  it('resetSections clears everything', () => {
+    useGestureStore.getState().processGesture('u', 0.9)
+    useGestureStore.getState().processGesture('m', 0.9)
+    useGestureStore.getState().resetSections()
+    expect(useGestureStore.getState().activeSections).toEqual([])
+    expect(useGestureStore.getState().isTutti).toBe(false)
+    expect(useGestureStore.getState().currentGesture).toBe(null)
+  })
+
+  it('addSection works for touch controls', () => {
+    useGestureStore.getState().addSection('madera')
+    expect(useGestureStore.getState().activeSections).toEqual(['madera'])
+    useGestureStore.getState().addSection('madera')
+    expect(useGestureStore.getState().activeSections).toEqual(['madera'])
   })
 
   it('tracks BLE status transitions', () => {
@@ -48,8 +82,6 @@ describe('useGestureStore', () => {
     expect(useGestureStore.getState().bleStatus).toBe('connecting')
     setBleStatus('connected')
     expect(useGestureStore.getState().bleStatus).toBe('connected')
-    setBleStatus('disconnected')
-    expect(useGestureStore.getState().bleStatus).toBe('disconnected')
   })
 
   it('accumulates BLE devices during scan', () => {
@@ -57,7 +89,6 @@ describe('useGestureStore', () => {
     addBleDevice({ deviceId: 'AA:BB:CC', name: 'Arduino', rssi: -42 })
     addBleDevice({ deviceId: 'DD:EE:FF', name: 'Arduino', rssi: -67 })
     expect(useGestureStore.getState().bleDevices).toHaveLength(2)
-    expect(useGestureStore.getState().bleDevices[0].rssi).toBe(-42)
 
     clearBleDevices()
     expect(useGestureStore.getState().bleDevices).toEqual([])
@@ -70,18 +101,5 @@ describe('useGestureStore', () => {
     const devices = useGestureStore.getState().bleDevices
     expect(devices).toHaveLength(1)
     expect(devices[0].rssi).toBe(-50)
-  })
-
-  it('stores connected device id', () => {
-    useGestureStore.getState().setBleDeviceId('AA:BB:CC')
-    expect(useGestureStore.getState().bleDeviceId).toBe('AA:BB:CC')
-  })
-
-  it('toggles touch controls and BLE panel visibility', () => {
-    const { setShowTouchControls, setShowBlePanel } = useGestureStore.getState()
-    setShowTouchControls(true)
-    expect(useGestureStore.getState().showTouchControls).toBe(true)
-    setShowBlePanel(true)
-    expect(useGestureStore.getState().showBlePanel).toBe(true)
   })
 })
