@@ -1,19 +1,12 @@
 import { useGestureStore } from '../../store/useGestureStore'
-import { SECTIONS } from '../../config/sections'
+import { SECTIONS, INSTRUMENT_KEYS } from '../../config/sections'
 import './TouchControls.css'
-
-const GESTURE_MAP = {
-  violines: 'infinito',
-  cuerdas: 'm',
-  madera: 'maracas',
-  metal: 'u',
-  tutti: 'tutti',
-}
 
 export default function TouchControls() {
   const started = useGestureStore((s) => s.started)
-  const activeSection = useGestureStore((s) => s.activeSection)
-  const setGesture = useGestureStore((s) => s.setGesture)
+  const activeSections = useGestureStore((s) => s.activeSections)
+  const isTutti = useGestureStore((s) => s.isTutti)
+  const addSection = useGestureStore((s) => s.addSection)
   const bleStatus = useGestureStore((s) => s.bleStatus)
   const showTouchControls = useGestureStore((s) => s.showTouchControls)
 
@@ -23,26 +16,21 @@ export default function TouchControls() {
 
   return (
     <div className={`touch-controls${visible ? '' : ' touch-controls--hidden'}`}>
-      {Object.entries(SECTIONS).map(([key, section]) => (
-        <button
-          key={key}
-          className={`touch-btn ${key === activeSection ? 'touch-btn--active' : ''}`}
-          style={{
-            '--section-color': section.color,
-          }}
-          onPointerDown={() => setGesture(GESTURE_MAP[key])}
-          aria-label={section.name}
-        >
-          <span className="touch-btn-label">{section.name.charAt(0)}</span>
-        </button>
-      ))}
-      <button
-        className="touch-btn touch-btn--silence"
-        onPointerDown={() => setGesture('silencio')}
-        aria-label="Silencio"
-      >
-        <span className="touch-btn-label">&times;</span>
-      </button>
+      {INSTRUMENT_KEYS.map((key) => {
+        const section = SECTIONS[key]
+        const isActive = activeSections.includes(key)
+        return (
+          <button
+            key={key}
+            className={`touch-btn${isActive ? ' touch-btn--active' : ''}${isTutti ? ' touch-btn--tutti' : ''}`}
+            style={{ '--section-color': section.color }}
+            onPointerDown={() => addSection(key)}
+            aria-label={section.name}
+          >
+            <span className="touch-btn-label">{section.name.charAt(0)}</span>
+          </button>
+        )
+      })}
     </div>
   )
 }
