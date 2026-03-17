@@ -1,17 +1,12 @@
 import { create } from 'zustand'
-
-const GESTURE_TO_SECTION = {
-  infinito: 'violines',
-  m: 'cuerdas',
-  maracas: 'madera',
-  u: 'metal',
-  tutti: 'tutti',
-  silencio: null,
-}
+import { GESTURE_TO_SECTION, ALL_INSTRUMENT_SECTIONS } from '../config/ble'
 
 export const useGestureStore = create((set) => ({
-  currentGesture: 'silencio',
-  activeSection: null,
+  // Gesture state (accumulative)
+  currentGesture: null,
+  gestureConfidence: 0,
+  activeSections: [],
+  isTutti: false,
   started: false,
 
   // BLE state
@@ -21,32 +16,53 @@ export const useGestureStore = create((set) => ({
   showTouchControls: false,
   showBlePanel: false,
 
-  setGesture: (gesture) => {
-    const section = GESTURE_TO_SECTION[gesture] ?? null
-    set({ currentGesture: gesture, activeSection: section })
-  },
+  // --- Gesture actions ---
+
+  processGesture: (label, confidence) => set((state) => {
+    const section = GESTURE_TO_SECTION[label] ?? null
+    const updates = { currentGesture: label, gestureConfidence: confidence }
+
+    if (!section) return updates
+
+    if (state.activeSections.includes(section)) return updates
+
+    const next = [...state.activeSections, section]
+    const isTutti = next.length === ALL_INSTRUMENT_SECTIONS.length
+    return { ...updates, activeSections: next, isTutti }
+  }),
+
+  resetSections: () => set({
+    activeSections: [],
+    isTutti: false,
+    currentGesture: null,
+    gestureConfidence: 0,
+  }),
+
+  addSection: (section) => set((state) => {
+    if (!section || state.activeSections.includes(section)) return state
+    const next = [...state.activeSections, section]
+    const isTutti = next.length === ALL_INSTRUMENT_SECTIONS.length
+    return { activeSections: next, isTutti }
+  }),
 
   setStarted: (started) => set({ started }),
 
-  // BLE actions
+  // --- BLE actions ---
   setBleStatus: (bleStatus) => set({ bleStatus }),
 
   addBleDevice: (device) =>
     set((state) => {
-      const exists = state.bleDevices.findIndex((d) => d.deviceId === device.deviceId)
-      if (exists >= 0) {
+      const idx = state.bleDevices.findIndex((d) => d.deviceId === device.deviceId)
+      if (idx >= 0) {
         const updated = [...state.bleDevices]
-        updated[exists] = device
+        updated[idx] = device
         return { bleDevices: updated }
       }
       return { bleDevices: [...state.bleDevices, device] }
     }),
 
   clearBleDevices: () => set({ bleDevices: [] }),
-
   setBleDeviceId: (bleDeviceId) => set({ bleDeviceId }),
-
   setShowTouchControls: (showTouchControls) => set({ showTouchControls }),
-
   setShowBlePanel: (showBlePanel) => set({ showBlePanel }),
 }))
