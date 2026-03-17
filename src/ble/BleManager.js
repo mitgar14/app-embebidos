@@ -21,12 +21,23 @@ class BleManagerClass {
 
     try {
       await BleClient.requestLEScan(
-        { allowDuplicates: false },
+        { services: [BLE_CONFIG.SERVICE_UUID], allowDuplicates: false },
         (result) => {
+          const name = result.localName || result.device.name || ''
+
+          if (!name.includes(BLE_CONFIG.DEVICE_NAME) && name !== '') {
+            return
+          }
+
+          const isKnown =
+            result.device.deviceId.toUpperCase().replace(/[:-]/g, '') ===
+            BLE_CONFIG.KNOWN_MAC.replace(/[:-]/g, '')
+
           onResult({
             deviceId: result.device.deviceId,
-            name: result.localName || result.device.name || 'Desconocido',
+            name: name || BLE_CONFIG.DEVICE_NAME,
             rssi: result.rssi ?? -100,
+            isKnown,
           })
         },
       )
@@ -43,11 +54,10 @@ class BleManagerClass {
   }
 
   async connect(deviceId, onDisconnect, onNotification) {
-    // Workaround Android: disconnect antes de connect para limpiar GATT handle
     try {
       await BleClient.disconnect(deviceId)
     } catch {
-      // Ignorar — puede no estar conectado
+      // Ignorar
     }
 
     await BleClient.connect(deviceId, () => {
@@ -62,8 +72,13 @@ class BleManagerClass {
       BLE_CONFIG.SERVICE_UUID,
       BLE_CONFIG.CHARACTERISTIC_UUID,
       (value) => {
-        const byte = value.getUint8(0)
-        onNotification?.(byte)
+        if (value.byteLength !== BLE_CONFIG.NUM_CLASSES) return
+
+        const probs = Array.from(
+          { length: BLE_CONFIG.NUM_CLASSES },
+          (_, i) => value.getUint8(i) / 255,
+        )
+        onNotification?.(probs)
       },
     )
   }
@@ -78,15 +93,11 @@ class BleManagerClass {
         BLE_CONFIG.SERVICE_UUID,
         BLE_CONFIG.CHARACTERISTIC_UUID,
       )
-    } catch {
-      // Ignorar si ya estaba desconectado
-    }
+    } catch { /* ignore */ }
 
     try {
       await BleClient.disconnect(deviceId)
-    } catch {
-      // Ignorar
-    }
+    } catch { /* ignore */ }
 
     this.connectedDeviceId = null
   }
