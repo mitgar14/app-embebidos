@@ -2,7 +2,7 @@ import { useEffect, useRef, useCallback } from 'react'
 import { Capacitor } from '@capacitor/core'
 import { useGestureStore } from '../store/useGestureStore'
 import { BleManager } from '../ble/BleManager'
-import { BLE_CONFIG, BYTE_TO_GESTURE } from '../config/ble'
+import { BLE_CONFIG, resolveGesture } from '../config/ble'
 
 const isNative = Capacitor.isNativePlatform()
 
@@ -10,11 +10,22 @@ export function useBle() {
   const reconnectAttempts = useRef(0)
   const reconnectTimer = useRef(null)
   const scanTimer = useRef(null)
+  const idleTimer = useRef(null)
   const connectRef = useRef(null)
 
-  // connectToDevice como función estable vía ref (evita deps circulares)
+  const resetIdleTimer = useCallback(() => {
+    clearTimeout(idleTimer.current)
+    idleTimer.current = setTimeout(() => {
+      useGestureStore.getState().resetSections()
+    }, BLE_CONFIG.IDLE_TIMEOUT)
+  }, [])
+
+  const clearIdleTimer = useCallback(() => {
+    clearTimeout(idleTimer.current)
+  }, [])
+
   const connectToDevice = useCallback(async (deviceId) => {
-    const { setBleStatus, setBleDeviceId, setGesture, setShowBlePanel } =
+    const { setBleStatus, setBleDeviceId, setShowBlePanel } =
       useGestureStore.getState()
 
     setBleStatus('connecting')
@@ -22,18 +33,16 @@ export function useBle() {
     try {
       await BleManager.connect(
         deviceId,
-        // onDisconnect
         (disconnectedId) => {
           setBleStatus('disconnected')
           setBleDeviceId(null)
-          // Usar ref para evitar dependencia circular
           attemptReconnect(disconnectedId)
         },
-        // onNotification
-        (byte) => {
-          const gesture = BYTE_TO_GESTURE[byte]
+        (probs) => {
+          const gesture = resolveGesture(probs)
           if (gesture) {
-            setGesture(gesture)
+            useGestureStore.getState().processGesture(gesture.label, gesture.confidence)
+            resetIdleTimer()
           }
         },
       )
@@ -46,9 +55,8 @@ export function useBle() {
       setBleStatus('disconnected')
       throw err
     }
-  }, [])
+  }, [resetIdleTimer])
 
-  // Guardar ref estable para uso en attemptReconnect
   connectRef.current = connectToDevice
 
   const attemptReconnect = useCallback((deviceId) => {
@@ -81,9 +89,10 @@ export function useBle() {
     return () => {
       clearTimeout(reconnectTimer.current)
       clearTimeout(scanTimer.current)
+      clearIdleTimer()
       BleManager.dispose()
     }
-  }, [])
+  }, [clearIdleTimer])
 
   const startScan = useCallback(async () => {
     const { setBleStatus, clearBleDevices, addBleDevice } =
@@ -101,7 +110,6 @@ export function useBle() {
       throw err
     }
 
-    // Timeout de escaneo — guardar ref para cleanup
     clearTimeout(scanTimer.current)
     scanTimer.current = setTimeout(async () => {
       await BleManager.stopScan()
@@ -129,11 +137,13 @@ export function useBle() {
 
   const disconnect = useCallback(async () => {
     clearTimeout(reconnectTimer.current)
+    clearIdleTimer()
     reconnectAttempts.current = 0
     await BleManager.disconnect()
     useGestureStore.getState().setBleStatus('idle')
     useGestureStore.getState().setBleDeviceId(null)
-  }, [])
+    useGestureStore.getState().resetSections()
+  }, [clearIdleTimer])
 
   return { startScan, stopScan, connect, disconnect }
 }
