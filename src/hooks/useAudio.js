@@ -12,8 +12,8 @@ const STEM_PATHS = {
 
 export function useAudio() {
   const managerRef = useRef(null)
-  const activeSection = useGestureStore((s) => s.activeSection)
-  const currentGesture = useGestureStore((s) => s.currentGesture)
+  const activeSections = useGestureStore((s) => s.activeSections)
+  const isTutti = useGestureStore((s) => s.isTutti)
   const started = useGestureStore((s) => s.started)
 
   useEffect(() => {
@@ -37,12 +37,12 @@ export function useAudio() {
     const manager = managerRef.current
     if (!manager) return
 
-    if (currentGesture === 'silencio') {
+    if (activeSections.length === 0) {
       manager.silence()
-    } else if (activeSection) {
-      manager.highlightSection(activeSection)
+    } else {
+      manager.highlightSections(activeSections, isTutti)
     }
-  }, [activeSection, currentGesture])
+  }, [activeSections, isTutti])
 
   return managerRef
 }
