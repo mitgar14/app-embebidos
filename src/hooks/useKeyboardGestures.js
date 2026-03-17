@@ -1,25 +1,29 @@
 import { useEffect } from 'react'
 import { useGestureStore } from '../store/useGestureStore'
 
-const KEY_MAP = {
-  '1': 'infinito',   // violines
-  '2': 'm',          // cuerdas graves
-  '3': 'maracas',    // vientos madera
-  '4': 'u',          // vientos metal
-  '5': 'tutti',      // tutti
-  '0': 'silencio',
-  Escape: 'silencio',
+const KEY_TO_SECTION = {
+  '1': 'violines',
+  '2': 'cuerdas',
+  '3': 'madera',
+  '4': 'metal',
 }
 
 export function useKeyboardGestures() {
-  const setGesture = useGestureStore((s) => s.setGesture)
+  const addSection = useGestureStore((s) => s.addSection)
+  const resetSections = useGestureStore((s) => s.resetSections)
 
   useEffect(() => {
     function handleKeyDown(e) {
-      const gesture = KEY_MAP[e.key]
-      if (gesture) setGesture(gesture)
+      const section = KEY_TO_SECTION[e.key]
+      if (section) {
+        addSection(section)
+        return
+      }
+      if (e.key === 'Escape') {
+        resetSections()
+      }
     }
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [setGesture])
+  }, [addSection, resetSections])
 }
